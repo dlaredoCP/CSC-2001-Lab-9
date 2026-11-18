@@ -1,12 +1,9 @@
-import java.lang.reflect.Array;
-import java.util.Arrays;
 import java.util.NoSuchElementException;
 
 public class ArrayList <T extends Comparable<T>>{
     private int liveCount;
     private T[] array;
 
-    @SuppressWarnings("unchecked")
     public ArrayList(T[] array, int liveCount) {
         this.array = array;
         this.liveCount = liveCount;
@@ -15,11 +12,6 @@ public class ArrayList <T extends Comparable<T>>{
     @SuppressWarnings("unchecked")
     public static <T extends Comparable<T>> ArrayList<T> emptyList(){
         return new ArrayList<>((T[]) new Comparable[2], 0);
-    }
-
-    /** Returns true if the collection is empty, false otherwise */
-    public boolean isEmpty(){
-        return liveCount==0;
     }
 
     /** Returns the number of elements in the list represented by the object */
@@ -33,6 +25,25 @@ public class ArrayList <T extends Comparable<T>>{
             throw new IllegalArgumentException();
         } else {
             return array[index];
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public void makeEmpty(){
+        array = (T[]) new Comparable[2];
+        liveCount = 0;
+    }
+
+    @SuppressWarnings("unchecked")
+    public void remove(int index){
+        if (index > liveCount-1){
+            throw new NoSuchElementException();
+        } else {
+            T[] replace = (T[]) new Comparable[liveCount-1];
+            System.arraycopy(array, 0, replace, 0, index-1);
+            System.arraycopy(array, index+1, replace, index, length()-index-1);
+            array = replace;
+            liveCount--;
         }
     }
 
@@ -70,33 +81,76 @@ public class ArrayList <T extends Comparable<T>>{
             T[] secondhalf = (T[]) new Comparable[data.length() - half];
             if (data.length() - half >= 0)
                 System.arraycopy(data.array, half, secondhalf, 0, data.length() - half);
-            return merge(mergeHelper(new ArrayList<>(firsthalf, firsthalf.length)), mergeHelper(new ArrayList<>(secondhalf, secondhalf.length)));
+            return mergeHelper(new ArrayList<>(firsthalf, firsthalf.length)).merge(mergeHelper(new ArrayList<>(secondhalf, secondhalf.length)));
         }
         return data;
     }
 
-    /** Accepts a value of type T and inserts it into a sorted ArrayList */
-    @SuppressWarnings("unchecked")
-    public void insert(T newVal) {
-        int index = Arrays.binarySearch(array, newVal);
-        if (index < 0) {
-            index = -(index + 1);
+    /** Accepts two sorted ArrayLists and merges them into one ArrayList that contains all the elements in sorted order */
+    public ArrayList<T> merge(ArrayList<T> dataTwo){
+        ArrayList<T> together = emptyList();
+        int a = 0;
+        int b = 0;
+        while (a<length() || b<dataTwo.length()){
+            if (b==dataTwo.length()){
+                for (int x=a; x<length(); x++){
+                    together.add(array[x]);
+                }
+                break;
+            }
+            if (a==length()){
+                for (int x=b; x<dataTwo.length(); x++){
+                    together.add(dataTwo.array[x]);
+                }
+                break;
+            } else {
+                if (array[a].compareTo(dataTwo.array[b]) < 0) {
+                    together.add(array[a]);
+                    a++;
+                } else if (array[a].compareTo(dataTwo.array[b]) > 0) {
+                    together.add(dataTwo.array[b]);
+                    b++;
+                } else {
+                    together.add(array[a]);
+                    together.add(dataTwo.array[b]);
+                    a++;
+                    b++;
+                }
+            }
         }
-        T[] newArray = (T[]) new Comparable[array.length + 1];
-        System.arraycopy(array, 0, newArray, 0, index);
-        newArray[index] = newVal;
-        System.arraycopy(array, index, newArray, index + 1, array.length - index);
-        array = newArray;
-        liveCount++;
+        return together;
     }
 
-    /** Accepts two sorted ArrayLists and merges them into one ArrayList that contains all the elements in sorted order */
-    public static <T extends Comparable<T>> ArrayList<T> merge(ArrayList<T> dataOne, ArrayList<T> dataTwo){
-        ArrayList<T> main = new ArrayList<>(dataTwo.array, dataOne.length()+dataTwo.length());
-        for (T item : main.array){
-            main.insert(item);
+    /** Accepts a target element and returns its index in the ArrayList, returns -1 if it's not in the ArrayList */
+    public int binarySearch(T target){
+        if (array == null || target == null) {
+            return -1;
         }
-        return main;
+        int low = 0;
+        int high = liveCount - 1;
+        while (low <= high) {
+            int mid = low + (high - low) / 2;
+            int comparison = array[mid].compareTo(target);
+            if (comparison == 0) {
+                return mid;
+            } else if (comparison < 0) {
+                low = mid + 1;
+            } else {
+                high = mid - 1;
+            }
+        }
+        return -1;
+    }
+
+    public void heapSort(){
+        Heap<T> heap = Heap.emptyHeap();
+        for (int x=0; x<liveCount; x++){
+            heap.enqueue(array[x]);
+        }
+        makeEmpty();
+        while (!heap.isEmpty()) {
+            add(heap.dequeue());
+        }
     }
 
 }
