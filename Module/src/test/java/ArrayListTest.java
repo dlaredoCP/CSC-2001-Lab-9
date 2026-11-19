@@ -1,11 +1,12 @@
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Array;
+import java.util.Random;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class ArrayListTest {
-    //TODO: add test
 
-    //TODO: mergeSort test
     @Test
     void testMergeSort_evens(){
         ArrayList<Integer> list = ArrayList.emptyList();
@@ -85,5 +86,38 @@ class ArrayListTest {
         assertEquals(2, list.get(0));
         assertEquals(8, list.get(1));
         assertEquals(16, list.get(2));
+    }
+
+    /** merge sort should be faster than heap sort */
+    /** --> timing ArrayList sizes of 10, 10^2, 10^3, 10^4, 10^5. . .10^10 */
+
+    @Test
+    void merge_measurement(){
+        for (long x=1; x<=Math.pow(10,9); x*=10){
+            ArrayList<Integer> list = ArrayList.emptyList();
+            for (int i=0; i<x; i++){
+                list.add(new Random().nextInt(100));
+            }
+            long startTime = System.nanoTime();
+            list = ArrayList.mergeSort(list);
+            long endTime = System.nanoTime();
+            double t = (double) (endTime - startTime) / 1000000000;
+            IO.println("It took " + t + " seconds for mergeSort to sort a list of " + x + " elements!");
+        }
+    }
+
+    @Test
+    void heap_measurement(){
+        for (long x=1; x<=Math.pow(10,9); x*=10){
+            ArrayList<Integer> list = ArrayList.emptyList();
+            for (int i=0; i<x; i++){
+                list.add(new Random().nextInt(100));
+            }
+            long startTime = System.nanoTime();
+            list.heapSort();
+            long endTime = System.nanoTime();
+            double t = (double) (endTime - startTime) / 1000000000;
+            IO.println("It took " + t + " seconds for heapSort to sort a list of " + x + " elements!");
+        }
     }
 }
